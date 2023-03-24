@@ -11,7 +11,7 @@ import {
   useDryRun,
   useTxPaymentInfo,
 } from 'useink';
-import metadata from '../../../../target/ink/playground.json';
+import metadata from '../../metadata/playground.json';
 
 const ADDRESS = '5GgKLqHJZr4BHTgYz4rw7UUnqW34c3Ackj7Vd4Y5rMCtENbZ';
 
