@@ -39,7 +39,19 @@ export const HomePage: React.FC = () => {
   return (
     <section className="w-full mx-auto">
       <div className="max-w-3xl w-full mx-auto py-16 px-4">
-        <h1 className="text-5xl font-bold text-blue-500 mb-16">useink Kitchen Sink</h1>
+        <h1 className="text-5xl font-bold text-blue-500">useink Kitchen Sink</h1>
+        <h2 className="text-2xl text-blue-500 mb-16">
+          See the contract definitions{' '}
+          <a
+            className="underline hover:opacity-80 transition duration-75"
+            href="https://github.com/paritytech/useink-kitchen-sink/blob/master/lib.rs"
+            target="_blank"
+            rel="noreferrer"
+          >
+            here
+          </a>
+          .
+        </h2>
 
         <div className="mt-8">
           {!account ? (
@@ -117,13 +129,13 @@ export const HomePage: React.FC = () => {
                   disabled={flipDryRun.isSubmitting}
                   className="rounded-2xl text-white px-6 py-4 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 hover:disabled:bg-blue-300 transition duration-75"
                 >
-                  {flipDryRun.isSubmitting ? 'Flipping' : 'Flip as a Dry Run!'}
+                  {flipDryRun.isSubmitting ? 'Flipping' : 'Flip as Dry Run!'}
                 </button>
 
                 <h3 className="text-xl">
-                  <b>Status:</b>{' '}
+                  <b>Gas Required:</b>{' '}
                   {flipDryRun.result?.ok
-                    ? flipDryRun.result.value.decoded
+                    ? flipDryRun.result.value.partialFee.toString()
                     : (flipDryRun.result?.error && decodeError(flipDryRun.result, contract).message) || '--'}
                 </h3>
               </li>
