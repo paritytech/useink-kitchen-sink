@@ -39,7 +39,7 @@ export const HomePage: React.FC = () => {
   return (
     <section className="w-full mx-auto">
       <div className="max-w-3xl w-full mx-auto py-16 px-4">
-        <h1 className="text-5xl font-bold text-blue-500 mb-16">useink Playground</h1>
+        <h1 className="text-5xl font-bold text-blue-500 mb-16">useink Kitchen Sink</h1>
 
         <div className="mt-8">
           {!account ? (
