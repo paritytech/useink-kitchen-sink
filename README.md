@@ -1,6 +1,6 @@
 # useink Kitchen Sink
 
-This is a full-stack kitchen sink for [useink](https://github.com/paritytech/useink) use cases.
+This is a full-stack dapp showing example front end patterns for Wasm smart contracts using [useink](https://github.com/paritytech/useink).
 
 ## Getting Started
 
