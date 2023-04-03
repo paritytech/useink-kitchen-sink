@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import {
   useBlockHeader,
   useCall,
@@ -13,7 +14,9 @@ import {
 } from 'useink';
 import metadata from '../../metadata/playground.json';
 
-const ADDRESS = '5GgKLqHJZr4BHTgYz4rw7UUnqW34c3Ackj7Vd4Y5rMCtENbZ';
+const ADDRESS = '5HiKMysYx7npX4cngjvdkygKaPgJYirPh9UG1cJpBssayxys';
+
+type MoodResult = { Ok?: { mood: string }; Err?: { BadMood: { mood: string } } };
 
 export const HomePage: React.FC = () => {
   const { account, connect } = useExtension();
@@ -27,6 +30,11 @@ export const HomePage: React.FC = () => {
   const flipPaymentInfo = useTxPaymentInfo(contract, 'flip');
   const panic = useCall<boolean>(contract, 'panic');
   const assertBoom = useCall<boolean>(contract, 'assertBoom');
+  const mood = useCall<MoodResult>(contract, 'mood');
+
+  useEffect(() => {
+    console.log(mood?.result?.ok && mood.result?.value?.decoded.Ok);
+  }, [mood.result]);
 
   if (!contract) {
     return (
@@ -187,6 +195,36 @@ export const HomePage: React.FC = () => {
                     ? decodeError(assertBoom.result, contract, {
                         ContractTrapped: 'This is a custom message. The assertion failed!',
                       }).message
+                    : '--'}
+                </h3>
+              </li>
+
+              <li className="flex flex-col gap-4">
+                <h3 className="text-xl">
+                  Handle Results. An even number will return an Ok Result, and an odd number will return an Error
+                </h3>
+                <button
+                  onClick={() => mood.send([0])}
+                  disabled={mood.isSubmitting}
+                  className="rounded-2xl text-white px-6 py-4 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 hover:disabled:bg-blue-300 transition duration-75"
+                >
+                  {mood.isSubmitting ? 'Getting mood...' : 'Get Ok Result'}
+                </button>
+
+                <button
+                  onClick={() => mood.send([1])}
+                  disabled={mood.isSubmitting}
+                  className="rounded-2xl text-white px-6 py-4 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 hover:disabled:bg-blue-300 transition duration-75"
+                >
+                  {mood.isSubmitting ? 'Getting mood...' : 'Get Err Result'}
+                </button>
+
+                <h3 className="text-xl">
+                  Mood:{' '}
+                  {mood.result?.ok
+                    ? mood.result.value?.decoded.Ok
+                      ? mood.result.value.decoded.Ok.mood
+                      : mood.result.value.decoded.Err?.BadMood.mood
                     : '--'}
                 </h3>
               </li>

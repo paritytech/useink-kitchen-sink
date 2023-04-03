@@ -1,11 +1,11 @@
 {
   "source": {
-    "hash": "0x9ba026eb22823d5a8e6cdf47a4610d6bf78d64d1f2f1749253efbf5950f5adbc",
+    "hash": "0xe6ae1bc5bcdf364b139a7228d2fcf63fff77fc7cdef054311798d6541eab6ad2",
     "language": "ink! 4.1.0",
-    "compiler": "rustc 1.68.1",
+    "compiler": "rustc 1.68.2",
     "build_info": {
       "build_mode": "Release",
-      "cargo_contract_version": "2.0.1",
+      "cargo_contract_version": "2.1.0",
       "rust_toolchain": "stable-x86_64-apple-darwin",
       "wasm_opt_settings": {
         "keep_debug_symbols": false,
@@ -81,7 +81,7 @@
               "displayName": [
                 "AccountId"
               ],
-              "type": 5
+              "type": 12
             }
           },
           {
@@ -148,7 +148,9 @@
       },
       {
         "args": [],
-        "docs": [],
+        "docs": [
+          " panic! in Rust will throw a 'Module' Dispatch error in PolkadotJS"
+        ],
         "label": "panic",
         "mutates": false,
         "payable": false,
@@ -175,6 +177,46 @@
           "type": 4
         },
         "selector": "0xfd78640a"
+      },
+      {
+        "args": [],
+        "docs": [],
+        "label": "result",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 4
+        },
+        "selector": "0x372377e0"
+      },
+      {
+        "args": [
+          {
+            "label": "value",
+            "type": {
+              "displayName": [
+                "u64"
+              ],
+              "type": 5
+            }
+          }
+        ],
+        "docs": [],
+        "label": "mood",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 6
+        },
+        "selector": "0x0e2511e0"
       }
     ]
   },
@@ -323,10 +365,178 @@
       "id": 5,
       "type": {
         "def": {
+          "primitive": "u64"
+        }
+      }
+    },
+    {
+      "id": 6,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 7
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 3
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 7
+          },
+          {
+            "name": "E",
+            "type": 3
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 7,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 8
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 10
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 8
+          },
+          {
+            "name": "E",
+            "type": 10
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 8,
+      "type": {
+        "def": {
           "composite": {
             "fields": [
               {
-                "type": 6,
+                "name": "mood",
+                "type": 9,
+                "typeName": "String"
+              }
+            ]
+          }
+        },
+        "path": [
+          "playground",
+          "playground",
+          "Happy"
+        ]
+      }
+    },
+    {
+      "id": 9,
+      "type": {
+        "def": {
+          "primitive": "str"
+        }
+      }
+    },
+    {
+      "id": 10,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 11,
+                    "typeName": "Unhappy"
+                  }
+                ],
+                "index": 0,
+                "name": "BadMood"
+              }
+            ]
+          }
+        },
+        "path": [
+          "playground",
+          "playground",
+          "Error"
+        ]
+      }
+    },
+    {
+      "id": 11,
+      "type": {
+        "def": {
+          "composite": {
+            "fields": [
+              {
+                "name": "mood",
+                "type": 9,
+                "typeName": "ink::prelude::string::String"
+              }
+            ]
+          }
+        },
+        "path": [
+          "playground",
+          "playground",
+          "Unhappy"
+        ]
+      }
+    },
+    {
+      "id": 12,
+      "type": {
+        "def": {
+          "composite": {
+            "fields": [
+              {
+                "type": 13,
                 "typeName": "[u8; 32]"
               }
             ]
@@ -340,18 +550,18 @@
       }
     },
     {
-      "id": 6,
+      "id": 13,
       "type": {
         "def": {
           "array": {
             "len": 32,
-            "type": 7
+            "type": 14
           }
         }
       }
     },
     {
-      "id": 7,
+      "id": 14,
       "type": {
         "def": {
           "primitive": "u8"
