@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import {
   useBlockHeader,
   useCall,
@@ -6,37 +5,41 @@ import {
   useContract,
   useContractTx,
   useExtension,
-  shouldDisable,
   useBalance,
-  decodeError,
   useDryRun,
   useTxPaymentInfo,
+  shouldDisable,
+  decodeError,
+  useBlockHeaders,
 } from 'useink';
 import metadata from '../../metadata/playground.json';
+import { ChainId } from 'useink/chains';
 
-const ADDRESS = '5HiKMysYx7npX4cngjvdkygKaPgJYirPh9UG1cJpBssayxys';
+const CONTRACTS_ROCOCO_ADDRESS = '5HiKMysYx7npX4cngjvdkygKaPgJYirPh9UG1cJpBssayxys';
+const SHIBUYA_CONTRACT_ADDRESS = 'Z91HMz88MfDjY4uKzAbcYvXeAHjwJWTLNzt52eHCNjotpMS';
 
 type MoodResult = { Ok?: { mood: string }; Err?: { BadMood: { mood: string } } };
 
 export const HomePage: React.FC = () => {
-  const { account, connect } = useExtension();
-  const block = useBlockHeader();
+  const { account, connect, disconnect } = useExtension();
+  const block = useBlockHeader(); // with no arguments it defaults to the first item in the chains config
+  const astarBlockNumber = useBlockHeader('Astar');
+  const allChainBlockHeaders = useBlockHeaders();
   const balance = useBalance(account);
-  const contract = useContract(ADDRESS, metadata);
-  const get = useCall<boolean>(contract, 'get');
-  const getSubcription = useCallSubscription<boolean>(contract, 'get');
-  const flipTx = useContractTx(contract, 'flip');
-  const flipDryRun = useDryRun(contract, 'flip');
-  const flipPaymentInfo = useTxPaymentInfo(contract, 'flip');
-  const panic = useCall<boolean>(contract, 'panic');
-  const assertBoom = useCall<boolean>(contract, 'assertBoom');
-  const mood = useCall<MoodResult>(contract, 'mood');
+  const cRococoContract = useContract(CONTRACTS_ROCOCO_ADDRESS, metadata);
+  const get = useCall<boolean>(cRococoContract?.contract, 'get');
+  const getSubcription = useCallSubscription<boolean>(cRococoContract, 'get');
+  const flipTx = useContractTx(cRococoContract?.contract, 'flip');
+  const flipDryRun = useDryRun(cRococoContract?.contract, 'flip');
+  const flipPaymentInfo = useTxPaymentInfo(cRococoContract?.contract, 'flip');
+  const panic = useCall<boolean>(cRococoContract?.contract, 'panic');
+  const assertBoom = useCall<boolean>(cRococoContract?.contract, 'assertBoom');
+  const mood = useCall<MoodResult>(cRococoContract?.contract, 'mood');
+  const shibuyaContract = useContract(SHIBUYA_CONTRACT_ADDRESS, metadata, 'Shibuya');
+  const shibuyaFlipTx = useContractTx(shibuyaContract?.contract, 'flip');
+  const shibuyaGetSubcription = useCallSubscription<boolean>(shibuyaContract, 'get');
 
-  useEffect(() => {
-    console.log(mood?.result?.ok && mood.result?.value?.decoded.Ok);
-  }, [mood.result]);
-
-  if (!contract) {
+  if (!cRococoContract?.contract) {
     return (
       <div className="justify-center h-screen flex items-center w-full">
         <h1 className="text-3xl font-bold">Loading contract...</h1>
@@ -72,6 +75,15 @@ export const HomePage: React.FC = () => {
           ) : (
             <ul className="list-none flex flex-col gap-12">
               <li>
+                <button
+                  onClick={disconnect}
+                  className="rounded-2xl text-white px-6 py-4 bg-blue-500 hover:bg-blue-600 transition duration-75"
+                >
+                  Disconnect
+                </button>
+              </li>
+
+              <li>
                 <b>You are connected as:</b>
                 <span className="ml-4 dark:bg-slate-600 bg-slate-200 rounded-lg py-2 px-2">{account.address}</span>
               </li>
@@ -84,10 +96,33 @@ export const HomePage: React.FC = () => {
               </li>
 
               <li>
-                <b>Current Block:</b>
+                <b>Contracts Rococo Current Block:</b>
                 <span className="ml-4 dark:bg-slate-600 bg-slate-200 rounded-lg py-2 px-2">
                   {block?.blockNumber === undefined ? '--' : block.blockNumber}
                 </span>
+              </li>
+
+              <li>
+                <b>Astar Current Block:</b>
+                <span className="ml-4 dark:bg-slate-600 bg-slate-200 rounded-lg py-2 px-2">
+                  {astarBlockNumber?.blockNumber === undefined ? '--' : astarBlockNumber.blockNumber}
+                </span>
+              </li>
+
+              <li>
+                <b>
+                  Get all blocks from configured chains using:{' '}
+                  <code className="p-2 rounded-md bg-slate-500">useBlockHeaders()</code>
+                </b>
+                <ul className="px-0 m-0 mt-6 gap-4 flex items-center flex-col md:flex-row">
+                  {Object.keys(allChainBlockHeaders).map((chainId: ChainId) => (
+                    <li key={chainId} className="p-0">
+                      <span>
+                        <b>{chainId}:</b> {allChainBlockHeaders[chainId]?.blockNumber || '--'}{' '}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
               </li>
 
               <li className="flex items-center gap-4">
@@ -132,6 +167,35 @@ export const HomePage: React.FC = () => {
               </li>
 
               <li className="flex flex-col gap-4">
+                <h3 className="text-xl">Call a contract on another chain. e.g. &quot;Shibuya&quot;</h3>
+
+                <h3 className="text-xl">
+                  Shibuya Flipped:{' '}
+                  {shibuyaGetSubcription.result?.ok ? shibuyaGetSubcription.result.value.decoded.toString() : '--'}
+                </h3>
+
+                <button
+                  onClick={() => shibuyaFlipTx.signAndSend()}
+                  disabled={shouldDisable(shibuyaFlipTx)}
+                  className="rounded-2xl text-white px-6 py-4 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 hover:disabled:bg-blue-300 transition duration-75"
+                >
+                  {shouldDisable(shibuyaFlipTx) ? 'Flipping Shibuya Contract' : 'Flip Shibuya Contract!'}
+                </button>
+
+                <h3 className="text-xl">
+                  <b>Status:</b> {shibuyaFlipTx.status}
+                </h3>
+
+                <button
+                  onClick={() => shibuyaFlipTx.resetState()}
+                  disabled={shouldDisable(shibuyaFlipTx) || ['InBlock', 'None'].includes(shibuyaFlipTx.status)}
+                  className="rounded-2xl text-white px-6 py-4 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 hover:disabled:bg-blue-300 transition duration-75"
+                >
+                  Reset state
+                </button>
+              </li>
+
+              <li className="flex flex-col gap-4">
                 <button
                   onClick={() => flipDryRun.send()}
                   disabled={flipDryRun.isSubmitting}
@@ -144,7 +208,8 @@ export const HomePage: React.FC = () => {
                   <b>Gas Required:</b>{' '}
                   {flipDryRun.result?.ok
                     ? flipDryRun.result.value.partialFee.toString()
-                    : (flipDryRun.result?.error && decodeError(flipDryRun.result, contract).message) || '--'}
+                    : (flipDryRun.result?.error && decodeError(flipDryRun.result, cRococoContract.contract).message) ||
+                      '--'}
                 </h3>
               </li>
 
@@ -174,7 +239,7 @@ export const HomePage: React.FC = () => {
 
                 <h3 className="text-xl">
                   {panic.result && !panic.result.ok
-                    ? decodeError(panic.result, contract, {
+                    ? decodeError(panic.result, cRococoContract.contract, {
                         ContractTrapped: 'This is a custom message. There was a panic in the contract!',
                       }).message
                     : '--'}
@@ -192,7 +257,7 @@ export const HomePage: React.FC = () => {
 
                 <h3 className="text-xl">
                   {assertBoom.result && !assertBoom.result.ok
-                    ? decodeError(assertBoom.result, contract, {
+                    ? decodeError(assertBoom.result, cRococoContract.contract, {
                         ContractTrapped: 'This is a custom message. The assertion failed!',
                       }).message
                     : '--'}
