@@ -1,14 +1,22 @@
 # useink Kitchen Sink
 
-This is a full-stack dapp showing example front end patterns for Wasm smart contracts using [useink](https://github.com/paritytech/useink).
+This is a full-stack dApp showing example front end patterns for Wasm smart contracts using [useink](https://github.com/paritytech/useink).
 
 ## Getting Started
 
 ```bash
 cd ./frontend
-npm run dev
+npm install
 # or
+yarn
+
+
+npm run dev
+
+# or
+
 yarn dev
+
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
