@@ -21,7 +21,7 @@ const SHIBUYA_CONTRACT_ADDRESS = 'Z91HMz88MfDjY4uKzAbcYvXeAHjwJWTLNzt52eHCNjotpM
 type MoodResult = { Ok?: { mood: string }; Err?: { BadMood: { mood: string } } };
 
 export const HomePage: React.FC = () => {
-  const { account, connect, disconnect } = useExtension();
+  const { account, accounts, setAccount, connect, disconnect } = useExtension();
   const block = useBlockHeader(); // with no arguments it defaults to the first item in the chains config
   const astarBlockNumber = useBlockHeader('Astar');
   const allChainBlockHeaders = useBlockHeaders();
@@ -85,8 +85,25 @@ export const HomePage: React.FC = () => {
 
               <li>
                 <b>You are connected as:</b>
-                <span className="ml-4 dark:bg-slate-600 bg-slate-200 rounded-lg py-2 px-2">{account.address}</span>
+                <span className="ml-4 dark:bg-slate-600 bg-slate-200 rounded-lg py-2 px-2">
+                  {account.meta.name || account.address}
+                </span>
               </li>
+
+              {accounts?.map(
+                (acc) =>
+                  account !== acc && (
+                    <li key={acc.address} className="flex flex-col">
+                      <b>Connect to {acc.meta.name ? acc.meta.name : 'another wallet'}</b>
+                      <button
+                        onClick={() => setAccount(acc)}
+                        className="rounded-2xl text-white px-4 py-2 mt-2 bg-blue-500 hover:bg-blue-600 transition duration-75"
+                      >
+                        {acc.address}
+                      </button>
+                    </li>
+                  ),
+              )}
 
               <li>
                 <b>Your Free Balance:</b>
