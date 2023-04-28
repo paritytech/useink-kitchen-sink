@@ -1,21 +1,29 @@
 /* eslint-disable @next/next/no-img-element */
 import {
+  decodeError,
+  isBroadcasting,
+  isFinalized,
+  isInBlock,
+  isPendingSignature,
+  shouldDisable,
+  useBalance,
   useBlockHeader,
+  useBlockHeaders,
   useCall,
   useCallSubscription,
+  useChainRpc,
+  useChainRpcList,
   useContract,
-  useTx,
-  useBalance,
   useDryRun,
+  useTx,
   useTxPaymentInfo,
-  shouldDisable,
-  decodeError,
-  useBlockHeaders,
   useWallet,
 } from 'useink';
 import metadata from '../../metadata/playground.json';
 import { ChainId } from 'useink/chains';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
+import { useNotifications } from 'useink/notifications';
+import { Notifications } from '../Notifications';
 
 const CONTRACTS_ROCOCO_ADDRESS = '5HiKMysYx7npX4cngjvdkygKaPgJYirPh9UG1cJpBssayxys';
 const SHIBUYA_CONTRACT_ADDRESS = 'Z91HMz88MfDjY4uKzAbcYvXeAHjwJWTLNzt52eHCNjotpMS';
@@ -25,21 +33,59 @@ type MoodResult = { Ok?: { mood: string }; Err?: { BadMood: { mood: string } } }
 export const HomePage: React.FC = () => {
   const { account, accounts, setAccount, connect, disconnect, getWallets } = useWallet();
   const block = useBlockHeader(); // with no arguments it defaults to the first item in the chains config
-  const astarBlockNumber = useBlockHeader('Astar');
+  const astarBlockNumber = useBlockHeader('astar');
   const allChainBlockHeaders = useBlockHeaders();
   const balance = useBalance(account);
   const cRococoContract = useContract(CONTRACTS_ROCOCO_ADDRESS, metadata);
+  const { rpcs, setChainRpc } = useChainRpcList('astar');
+  const astarRpc = useChainRpc('astar');
   const get = useCall<boolean>(cRococoContract?.contract, 'get');
   const getSubcription = useCallSubscription<boolean>(cRococoContract, 'get');
-  const flipTx = useTx(cRococoContract?.contract, 'flip');
+  const flipTx = useTx<void>(cRococoContract?.contract, 'flip');
   const flipDryRun = useDryRun(cRococoContract?.contract, 'flip');
   const flipPaymentInfo = useTxPaymentInfo(cRococoContract?.contract, 'flip');
   const panic = useCall<boolean>(cRococoContract?.contract, 'panic');
   const assertBoom = useCall<boolean>(cRococoContract?.contract, 'assertBoom');
   const mood = useCall<MoodResult>(cRococoContract?.contract, 'mood');
-  const shibuyaContract = useContract(SHIBUYA_CONTRACT_ADDRESS, metadata, 'Shibuya');
+  const shibuyaContract = useContract(SHIBUYA_CONTRACT_ADDRESS, metadata, 'shibuya-testnet');
   const shibuyaFlipTx = useTx(shibuyaContract?.contract, 'flip');
   const shibuyaGetSubcription = useCallSubscription<boolean>(shibuyaContract, 'get');
+  const { addNotification } = useNotifications();
+
+  useEffect(() => {
+    if (isPendingSignature(flipTx)) {
+      addNotification({ type: flipTx.status, message: `Please sign the transaction in your wallet` });
+    }
+
+    if (isBroadcasting(flipTx)) {
+      addNotification({
+        type: flipTx.status,
+        message: 'Flip transaction has been broadcast!',
+      });
+    }
+
+    if (isInBlock(flipTx)) {
+      addNotification({
+        type: flipTx.status,
+        message: 'Transaction is in the block.',
+      });
+    }
+
+    if (isFinalized(flipTx)) {
+      addNotification({ type: flipTx.status, message: `The transaction has been finalized.` });
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [flipTx.status]);
+
+  useEffect(() => {
+    account &&
+      addNotification({
+        type: 'WalletConnected',
+        message: `Connected to ${account.name || account.address}`,
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [account]);
 
   const installedWallets = useMemo(() => getWallets().filter((w) => w.installed), [getWallets]);
   const uninstalledWallets = useMemo(() => getWallets().filter((w) => !w.installed), [getWallets]);
@@ -54,6 +100,7 @@ export const HomePage: React.FC = () => {
 
   return (
     <section className="w-full mx-auto">
+      <Notifications />
       <div className="max-w-3xl w-full mx-auto py-16 px-4">
         <h1 className="text-5xl font-bold text-blue-500">useink Kitchen Sink</h1>
         <h2 className="text-2xl text-blue-500 mb-16">
@@ -166,12 +213,29 @@ export const HomePage: React.FC = () => {
               </li>
 
               <li>
+                <b>Change a chain&apos;s active RPC url: (e.g. Astar)</b>
+                <ul className="px-0 m-0 mt-6 gap-4 grid grid-cols-2 items-center">
+                  {rpcs.map((rpc) => (
+                    <li key={rpc} className="p-0">
+                      <button
+                        className="rounded-2xl w-full text-white px-6 py-4 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 hover:disabled:bg-blue-300 transition duration-75"
+                        disabled={rpc === astarRpc}
+                        onClick={() => setChainRpc(rpc, 'astar')}
+                      >
+                        {rpc}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </li>
+
+              <li>
                 <b>
                   Get all blocks from configured chains using:{' '}
                   <code className="p-2 rounded-md bg-slate-500">useBlockHeaders()</code>
                 </b>
                 <ul className="px-0 m-0 mt-6 gap-4 flex items-center flex-col md:flex-row">
-                  {Object.keys(allChainBlockHeaders).map((chainId: ChainId) => (
+                  {(Object.keys(allChainBlockHeaders) as ChainId[]).map((chainId) => (
                     <li key={chainId} className="p-0">
                       <span>
                         <b>{chainId}:</b> {allChainBlockHeaders[chainId]?.blockNumber || '--'}{' '}
