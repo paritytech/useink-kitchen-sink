@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import dynamic from 'next/dynamic';
 import { Fragment } from 'react';
-import { NotificationLevel, toNotificationLevel } from 'useink/notifications';
+import { NotificationLevel } from 'useink/notifications';
 
 const Transition = dynamic(() => import('@headlessui/react').then(({ Transition }) => Transition), { ssr: false });
 
