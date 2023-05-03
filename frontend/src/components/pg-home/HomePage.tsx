@@ -15,8 +15,10 @@ import {
   useChainRpcList,
   useContract,
   useDryRun,
+  useInstalledWallets,
   useTx,
   useTxPaymentInfo,
+  useUninstalledWallets,
   useWallet,
 } from 'useink';
 import metadata from '../../metadata/playground.json';
@@ -87,8 +89,8 @@ export const HomePage: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [account]);
 
-  const installedWallets = useMemo(() => getWallets().filter((w) => w.installed), [getWallets]);
-  const uninstalledWallets = useMemo(() => getWallets().filter((w) => !w.installed), [getWallets]);
+  const installedWallets = useInstalledWallets();
+  const uninstalledWallets = useUninstalledWallets();
 
   if (!cRococoContract?.contract) {
     return (
