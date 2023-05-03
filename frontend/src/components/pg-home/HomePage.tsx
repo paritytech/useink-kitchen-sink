@@ -33,7 +33,7 @@ const SHIBUYA_CONTRACT_ADDRESS = 'Z91HMz88MfDjY4uKzAbcYvXeAHjwJWTLNzt52eHCNjotpM
 type MoodResult = { Ok?: { mood: string }; Err?: { BadMood: { mood: string } } };
 
 export const HomePage: React.FC = () => {
-  const { account, accounts, setAccount, connect, disconnect, getWallets } = useWallet();
+  const { account, accounts, setAccount, connect, disconnect } = useWallet();
   const block = useBlockHeader(); // with no arguments it defaults to the first item in the chains config
   const astarBlockNumber = useBlockHeader('astar');
   const allChainBlockHeaders = useBlockHeaders();
