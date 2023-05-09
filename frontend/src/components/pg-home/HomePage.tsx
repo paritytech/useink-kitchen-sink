@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import {
   decodeError,
-  isBroadcasting,
+  isBroadcast,
   isFinalized,
   isInBlock,
   isPendingSignature,
@@ -15,6 +15,8 @@ import {
   useChainRpcList,
   useContract,
   useDryRun,
+  useEventSubscription,
+  useEvents,
   useInstalledWallets,
   useTx,
   useTxPaymentInfo,
@@ -24,7 +26,7 @@ import {
 import metadata from '../../metadata/playground.json';
 import { ChainId } from 'useink/chains';
 import { useEffect, useMemo } from 'react';
-import { useNotifications } from 'useink/notifications';
+import { useNotifications, useTxNotifications } from 'useink/notifications';
 import { Notifications } from '../Notifications';
 
 const CONTRACTS_ROCOCO_ADDRESS = '5HiKMysYx7npX4cngjvdkygKaPgJYirPh9UG1cJpBssayxys';
@@ -51,15 +53,19 @@ export const HomePage: React.FC = () => {
   const mood = useCall<MoodResult>(cRococoContract?.contract, 'mood');
   const shibuyaContract = useContract(SHIBUYA_CONTRACT_ADDRESS, metadata, 'shibuya-testnet');
   const shibuyaFlipTx = useTx(shibuyaContract?.contract, 'flip');
+  useTxNotifications(shibuyaFlipTx); // Add a notification on tx status changes
   const shibuyaGetSubcription = useCallSubscription<boolean>(shibuyaContract, 'get');
   const { addNotification } = useNotifications();
+  useEventSubscription(cRococoContract);
+  const { events } = useEvents(cRococoContract?.contract?.address);
 
   useEffect(() => {
+    // Customize messages 
     if (isPendingSignature(flipTx)) {
       addNotification({ type: flipTx.status, message: `Please sign the transaction in your wallet` });
     }
 
-    if (isBroadcasting(flipTx)) {
+    if (isBroadcast(flipTx)) {
       addNotification({
         type: flipTx.status,
         message: 'Flip transaction has been broadcast!',
@@ -182,7 +188,7 @@ export const HomePage: React.FC = () => {
                 (acc) =>
                   account !== acc && (
                     <li key={acc.address} className="flex flex-col">
-                      <b>Connect to {acc.name ? acc.name : 'another wallet'}</b>
+                      <b>Connect to {acc.name ? acc.name : 'wallet'}</b>
                       <button
                         onClick={() => setAccount(acc)}
                         className="rounded-2xl text-white px-4 py-2 mt-2 bg-blue-500 hover:bg-blue-600 transition duration-75"
@@ -279,6 +285,17 @@ export const HomePage: React.FC = () => {
                   <b>Status:</b> {flipTx.status}
                 </h3>
 
+                <h3 className="text-xl">
+                  <b>Events:</b> 
+                  <ul className='ml-4'>
+                    {events.map(event => (
+                      <li key={event.id} className='text-md mb-4'>
+                        <b>{event.name}</b> - flipper: {event.args?.[0] as string}, value: {event.args?.[1]?.toString()}
+                      </li>
+                    ))}
+                  </ul>
+                </h3>
+
                 <button
                   onClick={() => flipTx.resetState()}
                   disabled={shouldDisable(flipTx) || ['InBlock', 'None'].includes(flipTx.status)}
@@ -330,8 +347,9 @@ export const HomePage: React.FC = () => {
                   <b>Gas Required:</b>{' '}
                   {flipDryRun.result?.ok
                     ? flipDryRun.result.value.partialFee.toString()
-                    : (flipDryRun.result?.error && decodeError(flipDryRun.result, cRococoContract.contract).message) ||
-                      '--'}
+                    : flipDryRun.result?.error
+                    ? decodeError(flipDryRun, cRococoContract)
+                    : '--'}
                 </h3>
               </li>
 
@@ -361,9 +379,9 @@ export const HomePage: React.FC = () => {
 
                 <h3 className="text-xl">
                   {panic.result && !panic.result.ok
-                    ? decodeError(panic.result, cRococoContract.contract, {
+                    ? decodeError(panic, cRococoContract, {
                         ContractTrapped: 'This is a custom message. There was a panic in the contract!',
-                      }).message
+                      })
                     : '--'}
                 </h3>
               </li>
@@ -379,9 +397,9 @@ export const HomePage: React.FC = () => {
 
                 <h3 className="text-xl">
                   {assertBoom.result && !assertBoom.result.ok
-                    ? decodeError(assertBoom.result, cRococoContract.contract, {
+                    ? decodeError(assertBoom, cRococoContract, {
                         ContractTrapped: 'This is a custom message. The assertion failed!',
-                      }).message
+                      })
                     : '--'}
                 </h3>
               </li>
