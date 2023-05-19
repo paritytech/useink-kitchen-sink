@@ -23,6 +23,7 @@ import {
   useUninstalledWallets,
   useWallet,
 } from 'useink';
+import { RustResult, pickDecoded, pickResultErr, pickResultOk } from 'useink/utils';
 import metadata from '../../metadata/playground.json';
 import { ChainId } from 'useink/chains';
 import { useEffect, useMemo } from 'react';
@@ -32,7 +33,9 @@ import { Notifications } from '../Notifications';
 const CONTRACTS_ROCOCO_ADDRESS = '5HiKMysYx7npX4cngjvdkygKaPgJYirPh9UG1cJpBssayxys';
 const SHIBUYA_CONTRACT_ADDRESS = 'Z91HMz88MfDjY4uKzAbcYvXeAHjwJWTLNzt52eHCNjotpMS';
 
-type MoodResult = { Ok?: { mood: string }; Err?: { BadMood: { mood: string } } };
+// RustResult<T, E> is a convenience type to define { Ok?: T, Err?: E }, returned by calls
+// to contracts that return a Result<T, E>
+type MoodResult = RustResult<{ mood: string }, { BadMood: { mood: string } }>;
 
 export const HomePage: React.FC = () => {
   const { account, accounts, setAccount, connect, disconnect } = useWallet();
@@ -58,6 +61,12 @@ export const HomePage: React.FC = () => {
   const { addNotification } = useNotifications();
   useEventSubscription(cRococoContract);
   const { events } = useEvents(cRococoContract?.contract?.address);
+
+  // Use helper functions to quickly pick values from a Result<T, E>
+  // Instead of doing something like this:
+  // mood?.result?.ok ? mood.result.value.decoded : undefined
+  const goodMood = pickResultOk(mood.result);
+  const badMood = pickResultErr(mood.result);
 
   useEffect(() => {
     // Customize messages 
@@ -262,13 +271,13 @@ export const HomePage: React.FC = () => {
                   Call get()
                 </button>
 
-                <h3 className="text-xl">Value: {get.result?.ok ? get.result.value.decoded.toString() : '--'}</h3>
+                <h3 className="text-xl">Value: {pickDecoded(get.result)?.toString() || '--'}</h3>
               </li>
 
               <li className="flex items-center gap-4">
                 <h3 className="text-xl">
                   get() will update on new blocks:{' '}
-                  {getSubcription.result?.ok ? getSubcription.result.value.decoded.toString() : '--'}
+                  {pickDecoded(getSubcription.result)?.toString() || '--'}
                 </h3>
               </li>
 
@@ -310,7 +319,7 @@ export const HomePage: React.FC = () => {
 
                 <h3 className="text-xl">
                   Shibuya Flipped:{' '}
-                  {shibuyaGetSubcription.result?.ok ? shibuyaGetSubcription.result.value.decoded.toString() : '--'}
+                  {pickDecoded(shibuyaGetSubcription.result)?.toString() || '--'}
                 </h3>
 
                 <button
@@ -348,6 +357,12 @@ export const HomePage: React.FC = () => {
                   {flipDryRun.result?.ok
                     ? flipDryRun.result.value.partialFee.toString()
                     : flipDryRun.result?.error
+                    ? decodeError(flipDryRun, cRococoContract, {}, '--')
+                    : '--'}
+
+                  {flipDryRun.result?.ok
+                    ? flipDryRun.result.value.partialFee.toString()
+                    : flipDryRun.result?.error
                     ? decodeError(flipDryRun, cRococoContract)
                     : '--'}
                 </h3>
@@ -378,11 +393,12 @@ export const HomePage: React.FC = () => {
                 </button>
 
                 <h3 className="text-xl">
-                  {panic.result && !panic.result.ok
-                    ? decodeError(panic, cRococoContract, {
-                        ContractTrapped: 'This is a custom message. There was a panic in the contract!',
-                      })
-                    : '--'}
+                  {decodeError(
+                    panic, 
+                    cRococoContract, 
+                    { ContractTrapped: 'This is a custom message. There was a panic in the contract!' }, 
+                    '--'
+                  )}
                 </h3>
               </li>
 
@@ -396,11 +412,12 @@ export const HomePage: React.FC = () => {
                 </button>
 
                 <h3 className="text-xl">
-                  {assertBoom.result && !assertBoom.result.ok
-                    ? decodeError(assertBoom, cRococoContract, {
-                        ContractTrapped: 'This is a custom message. The assertion failed!',
-                      })
-                    : '--'}
+                  {decodeError(
+                    assertBoom, 
+                    cRococoContract, 
+                    { ContractTrapped: 'This is a custom message. The assertion failed!' }, 
+                    '--',
+                  )}
                 </h3>
               </li>
 
@@ -426,11 +443,9 @@ export const HomePage: React.FC = () => {
 
                 <h3 className="text-xl">
                   Mood:{' '}
-                  {mood.result?.ok
-                    ? mood.result.value?.decoded.Ok
-                      ? mood.result.value.decoded.Ok.mood
-                      : mood.result.value.decoded.Err?.BadMood.mood
-                    : '--'}
+                  {!goodMood && !badMood && '--'}
+                  {goodMood?.mood}
+                  {badMood?.BadMood.mood}
                 </h3>
               </li>
             </ul>
