@@ -23,7 +23,7 @@ import {
   useUninstalledWallets,
   useWallet,
 } from 'useink';
-import { RustResult, pickDecoded, pickResultErr, pickResultOk } from 'useink/utils';
+import { RustResult, pickCallInfo, pickDecoded, pickResultErr, pickResultOk, pickTxInfo } from 'useink/utils';
 import metadata from '../../metadata/playground.json';
 import { ChainId } from 'useink/chains';
 import { useEffect, useMemo } from 'react';
@@ -354,17 +354,8 @@ export const HomePage: React.FC = () => {
 
                 <h3 className="text-xl">
                   <b>Gas Required:</b>{' '}
-                  {flipDryRun.result?.ok
-                    ? flipDryRun.result.value.partialFee.toString()
-                    : flipDryRun.result?.error
-                    ? decodeError(flipDryRun, cRococoContract, {}, '--')
-                    : '--'}
-
-                  {flipDryRun.result?.ok
-                    ? flipDryRun.result.value.partialFee.toString()
-                    : flipDryRun.result?.error
-                    ? decodeError(flipDryRun, cRococoContract)
-                    : '--'}
+                  {pickTxInfo(flipDryRun.result)?.partialFee.toString()}
+                  {decodeError(flipDryRun, cRococoContract, {}, '--')}
                 </h3>
               </li>
 
@@ -379,7 +370,7 @@ export const HomePage: React.FC = () => {
 
                 <h3 className="text-xl">
                   <b>Partial Fee (a.k.a. Gas Required):</b>{' '}
-                  {flipPaymentInfo.result ? flipPaymentInfo.result?.partialFee.toString() : '--'}
+                  {pickTxInfo(flipPaymentInfo?.result)?.partialFee?.toString() || '--'}
                 </h3>
               </li>
 
