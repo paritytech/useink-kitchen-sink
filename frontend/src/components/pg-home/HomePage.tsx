@@ -1,11 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
 import {
-  decodeError,
-  isBroadcast,
-  isFinalized,
-  isInBlock,
-  isPendingSignature,
-  shouldDisable,
   useBalance,
   useBlockHeader,
   useBlockHeaders,
@@ -23,15 +17,15 @@ import {
   useUninstalledWallets,
   useWallet,
 } from 'useink';
-import { RustResult, pickCallInfo, pickDecoded, pickResultErr, pickResultOk, pickTxInfo } from 'useink/utils';
+import { RustResult, isBroadcast, isFinalized, isInBlock, isPendingSignature, pickDecoded, pickDecodedError, pickResultErr, pickResultOk, pickTxInfo, shouldDisable } from 'useink/utils';
 import metadata from '../../metadata/playground.json';
 import { ChainId } from 'useink/chains';
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import { useNotifications, useTxNotifications } from 'useink/notifications';
 import { Notifications } from '../Notifications';
 
-const CONTRACTS_ROCOCO_ADDRESS = '5HiKMysYx7npX4cngjvdkygKaPgJYirPh9UG1cJpBssayxys';
-const SHIBUYA_CONTRACT_ADDRESS = 'Z91HMz88MfDjY4uKzAbcYvXeAHjwJWTLNzt52eHCNjotpMS';
+const CONTRACTS_ROCOCO_ADDRESS = '5CjfqiydebzW7uXjGhfvA1Z5ABEjH6uF17ZBNnK9LMadCgSX';
+const SHIBUYA_CONTRACT_ADDRESS = 'YBAkUAjocSTwdJ7Wv5mZtrjMCiCmCqtsihsdSv2EanbAc3k';
 
 // RustResult<T, E> is a convenience type to define { Ok?: T, Err?: E }, returned by calls
 // to contracts that return a Result<T, E>
@@ -49,7 +43,7 @@ export const HomePage: React.FC = () => {
   const get = useCall<boolean>(cRococoContract?.contract, 'get');
   const getSubcription = useCallSubscription<boolean>(cRococoContract, 'get');
   const flipTx = useTx<void>(cRococoContract?.contract, 'flip');
-  const flipDryRun = useDryRun(cRococoContract?.contract, 'flip');
+  const flipDryRun = useDryRun<boolean>(cRococoContract?.contract, 'flip');
   const flipPaymentInfo = useTxPaymentInfo(cRococoContract?.contract, 'flip');
   const panic = useCall<boolean>(cRococoContract?.contract, 'panic');
   const assertBoom = useCall<boolean>(cRococoContract?.contract, 'assertBoom');
@@ -355,7 +349,7 @@ export const HomePage: React.FC = () => {
                 <h3 className="text-xl">
                   <b>Gas Required:</b>{' '}
                   {pickTxInfo(flipDryRun.result)?.partialFee.toString()}
-                  {decodeError(flipDryRun, cRococoContract, {}, '--')}
+                  {pickDecodedError(flipDryRun, cRococoContract, {}, '--')}
                 </h3>
               </li>
 
@@ -370,7 +364,7 @@ export const HomePage: React.FC = () => {
 
                 <h3 className="text-xl">
                   <b>Partial Fee (a.k.a. Gas Required):</b>{' '}
-                  {pickTxInfo(flipPaymentInfo?.result)?.partialFee?.toString() || '--'}
+                  {flipPaymentInfo.result?.partialFee?.toString() || '--'}
                 </h3>
               </li>
 
@@ -384,11 +378,11 @@ export const HomePage: React.FC = () => {
                 </button>
 
                 <h3 className="text-xl">
-                  {decodeError(
+                  {pickDecodedError(
                     panic, 
                     cRococoContract, 
                     { ContractTrapped: 'This is a custom message. There was a panic in the contract!' }, 
-                    '--'
+                    'this is a default error message',
                   )}
                 </h3>
               </li>
@@ -403,7 +397,7 @@ export const HomePage: React.FC = () => {
                 </button>
 
                 <h3 className="text-xl">
-                  {decodeError(
+                  {pickDecodedError(
                     assertBoom, 
                     cRococoContract, 
                     { ContractTrapped: 'This is a custom message. The assertion failed!' }, 

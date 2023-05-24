@@ -59,13 +59,15 @@ mod playground {
         /// This one flips the value of the stored `bool` from `true`
         /// to `false` and vice versa.
         #[ink(message)]
-        pub fn flip(&mut self) {
+        pub fn flip(&mut self) -> bool {
             self.value = !self.value;
 
             Self::env().emit_event(Flipped {
                 flipper: Self::env().caller(),
                 value: self.value,
-            })
+            });
+
+            self.value
         }
 
         /// Simply returns the current value of our `bool`.
