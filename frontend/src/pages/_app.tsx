@@ -17,6 +17,9 @@ function App({ Component, pageProps }: AppProps) {
       config={{
         dappName: 'useink Kitchen Sink',
         chains: [RococoContractsTestnet, RococoTestnet, ShibuyaTestnet, Astar, Phala, Aleph],
+        caller: {
+          default: '5EyR7vEk7DtvEWeefGcXXMV6hKwB8Ex5uvjHufm466mbjJkR',
+        }
       }}
     >
       <NotificationsProvider>
