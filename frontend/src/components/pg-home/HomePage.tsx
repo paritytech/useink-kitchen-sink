@@ -24,12 +24,14 @@ import { useEffect } from 'react';
 import { useNotifications, useTxNotifications } from 'useink/notifications';
 import { Notifications } from '../Notifications';
 
-const CONTRACTS_ROCOCO_ADDRESS = '5CjfqiydebzW7uXjGhfvA1Z5ABEjH6uF17ZBNnK9LMadCgSX';
-const SHIBUYA_CONTRACT_ADDRESS = 'YBAkUAjocSTwdJ7Wv5mZtrjMCiCmCqtsihsdSv2EanbAc3k';
+const CONTRACTS_ROCOCO_ADDRESS = '5G31GiBqWPFCm8S9cknY7UWAPA8SwNJJdoG4RrmtVDQyrk7Y';
+const SHIBUYA_CONTRACT_ADDRESS = 'XtH77i6CYHSSg7tFerUMCSWifBcAz2gewDXeyQNCbgRXHs8';
 
+interface Happy { mood: string };
+interface BadMood { BadMood: { mood: string } };
 // RustResult<T, E> is a convenience type to define { Ok?: T, Err?: E }, returned by calls
 // to contracts that return a Result<T, E>
-type MoodResult = RustResult<{ mood: string }, { BadMood: { mood: string } }>;
+type MoodResult = RustResult<Happy, BadMood>;
 
 export const HomePage: React.FC = () => {
   const { account, accounts, setAccount, connect, disconnect } = useWallet();
@@ -55,6 +57,7 @@ export const HomePage: React.FC = () => {
   const { addNotification } = useNotifications();
   useEventSubscription(cRococoContract);
   const { events } = useEvents(cRococoContract?.contract?.address);
+  const option = useCall<Happy | null>(cRococoContract, 'option');
 
   // Use helper functions to quickly pick values from a Result<T, E>
   // Instead of doing something like this:
@@ -435,6 +438,33 @@ export const HomePage: React.FC = () => {
                 {!goodMood && !badMood && '--'}
                 {goodMood?.mood}
                 {badMood?.BadMood.mood}
+              </h3>
+            </li>
+
+            <li className="flex flex-col gap-4">
+              <h3 className="text-xl">
+                Handle Options. An even number will return a Some(Happy), and an odd number will return None
+              </h3>
+              <button
+                onClick={() => option.send([0], { defaultCaller: true })}
+                disabled={option.isSubmitting}
+                className="rounded-2xl text-white px-6 py-4 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 hover:disabled:bg-blue-300 transition duration-75"
+              >
+                {option.isSubmitting ? 'Getting option result...' : 'Get Some(Happy) result'}
+              </button>
+
+              <button
+                onClick={() => option.send([1], { defaultCaller: true })}
+                disabled={option.isSubmitting}
+                className="rounded-2xl text-white px-6 py-4 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 hover:disabled:bg-blue-300 transition duration-75"
+              >
+                {option.isSubmitting ? 'Getting option result...' : 'Get Option None Response'}
+              </button>
+
+              <h3 className="text-xl">
+                Option:{' '}
+                {!option.result && '--'}
+                {JSON.stringify(pickDecoded(option.result))}
               </h3>
             </li>
           </ul>
