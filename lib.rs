@@ -106,5 +106,15 @@ mod playground {
                 mood: String::from("Odd values make me sad :("),
             }))
         }
+
+        #[ink(message)]
+        pub fn option(&self, value: u64) -> Option<Happy> {
+            if value % 2 == 0 {
+                return Some(Happy {
+                    mood: String::from("Even numbers make me happy :)"),
+                });
+            }
+            None
+        }
     }
 }
