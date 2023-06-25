@@ -1,4 +1,8 @@
-# useink Kitchen Sink
+# DEPRECATED
+
+See [the new repo with examples](https://github.com/paritytech/useink/tree/main/playground)
+
+## useink Kitchen Sink
 
 This is a full-stack dapp showing example front end patterns for Wasm smart contracts using [useink](https://github.com/paritytech/useink).
 
